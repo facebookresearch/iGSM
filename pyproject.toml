@@ -13,6 +13,9 @@ dependencies = [
     "networkx",
     "numpy",
     "matplotlib",
+    "pandas",
+    "tqdm",
+    "scipy",
 ]
 
 [tool.setuptools.packages.find]

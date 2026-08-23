@@ -12,19 +12,23 @@ import numpy as np
 from heapq import heappush, heappop
 from itertools import count, product
 from typing import List, Dict, Union, Callable, Any
+from const import params
 from const.params import mod, try_num, feasible_symbols
 
 class Num(object):
     def __init__(self, a: Union[int, str]=None, mod=mod, mul=False) -> None:
         self.mod = mod
         if a == None:
+            # A randomly drawn leaf is always in [0, mod), whether or not reduction is on:
+            # params.reduce_mod widens the values a solution *computes*, not the quantities
+            # the problem statement mentions.
             if mul:
                 self.a = random.randint(1, self.mod - 1)
             else:
                 self.a = random.randint(0, self.mod - 1)
         elif isinstance(a, str):
-            self.a = int(a) % self.mod
-        else: self.a = a % self.mod
+            self.a = int(a) % self.mod if params.reduce_mod else int(a)
+        else: self.a = a % self.mod if params.reduce_mod else a
     
     def __add__(self, other):
         if isinstance(other, Num):

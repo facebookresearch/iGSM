@@ -6,6 +6,19 @@
 import string
 
 mod = 23
+
+# Whether arithmetic is reduced modulo `mod`. When False, `mod` still bounds the
+# randomly drawn leaf values (so the quantities stated in a problem stay small and
+# readable), but sums/differences/products are kept exact and may grow arbitrarily
+# large. Set for the duration of a single IdGen.gen_prob() call -- see the
+# mod_reduction() context manager in data_gen/prototype/id_gen.py -- never assigned
+# directly.
+#
+# Read dynamically (`params.reduce_mod`), never imported by value: `from
+# const.params import reduce_mod` would snapshot it at import time and silently
+# ignore the flag.
+reduce_mod = True
+
 dot = "'s "
 try_num = 1000
 retry_key_word = "BACK"

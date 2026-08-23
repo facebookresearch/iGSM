@@ -3,14 +3,34 @@
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 
+import contextlib
 import random
+from const import params
 from const.params import dot
 from math_gen.problem_gen import Problem
 from typing import Optional
 from tools.tools import choose_from_softmax, tokenizer
 
+
+@contextlib.contextmanager
+def mod_reduction(enabled: bool):
+    '''Set params.reduce_mod for the duration of one problem generation, then restore it.
+
+    Scoped to a single gen_prob() call rather than set once at import, because one
+    process generates several kinds of problem in sequence and the flag must not leak
+    past the caller that asked for it.
+    '''
+    previous = params.reduce_mod
+    params.reduce_mod = enabled
+    try:
+        yield
+    finally:
+        params.reduce_mod = previous
+
+
 class IdGen_PT(object):
-    def __init__(self, style: str, op_style: str, max_op=10, max_edge=15, op=None, perm_level: str=None, detail_level: str=None, be_shortest: bool=True) -> None:
+    def __init__(self, style: str, op_style: str, max_op=10, max_edge=15, op=None, perm_level: str=None, detail_level: str=None, be_shortest: bool=True, reduce_mod: bool=True) -> None:
+        self.reduce_mod = reduce_mod
         self.style = style
         self.op_style = op_style
         self.max_op = max_op
@@ -188,6 +208,12 @@ class IdGen_PT(object):
             return min(t0, t1)
 
     def gen_prob(self, ava_hash, p_format: str, problem: Optional[Problem]=None):
+        # Every Num built below reads params.reduce_mod, so the whole generation -- the
+        # rejection loop included -- has to run inside one consistent setting.
+        with mod_reduction(self.reduce_mod):
+            return self._gen_prob(ava_hash, p_format, problem=problem)
+
+    def _gen_prob(self, ava_hash, p_format: str, problem: Optional[Problem]=None):
         if not problem:
             while True:
                 self.gen_param()
